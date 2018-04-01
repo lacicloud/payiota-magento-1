@@ -1,0 +1,71 @@
+<?xml version="1.0"?>
+<config>
+    <modules>
+       <PayIOTA_PayIOTA>
+          <version>0.1.0</version>
+       </PayIOTA_PayIOTA>
+    </modules>
+ 
+    <global>
+    <blocks>
+        <payiota>
+            <class>PayIOTA_PayIOTA_Block</class>
+        </payiota>
+    </blocks>
+     <helpers>
+      <payiota>
+        <class>PayIOTA_PayIOTA_Helper</class>
+      </payiota>
+    </helpers>    
+    <models>
+			<payiota>
+				<class>PayIOTA_PayIOTA_Model</class>
+			</payiota>
+		</models>
+ 
+        <resources>
+            <payiota_setup>
+                <setup>
+                    <module>PayIOTA_PayIOTA</module>
+                </setup>
+                <connection>
+                    <use>core_setup</use>
+                </connection>
+            </payiota_setup>
+            <payiota_write>
+                <connection>
+                  <use>core_write</use>
+                </connection>
+            </payiota_write>
+            <payiota_read>
+               <connection>
+                <use>core_read</use>
+              </connection>
+            </payiota_read>
+        </resources>
+    </global>
+ 
+    <default>
+        <payment>
+            <payiota>
+                <active>0</active>
+                <model>payiota/PaymentMethod</model>
+                <order_status>pending</order_status>
+                <title>PayIOTA.me - IOTA payments</title> 
+				        <payment_action>sale</payment_action>
+				        <allowspecific>0</allowspecific>
+            </payiota>
+         </payment>
+    </default>
+  <frontend>
+    <routers>
+      <payiota>
+        <use>standard</use>
+        <args>
+          <module>PayIOTA_PayIOTA</module>
+          <frontName>payiota</frontName>
+        </args>
+      </payiota>
+    </routers>
+  </frontend>
+</config>

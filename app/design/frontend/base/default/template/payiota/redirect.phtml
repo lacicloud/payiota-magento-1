@@ -1,0 +1,64 @@
+<?php
+// Retrieve order
+$_order = new Mage_Sales_Model_Order();
+//note that orderId here is the increment ID
+$orderId = Mage::getSingleton('checkout/session')->getLastRealOrderId();
+$_order->loadByIncrementId($orderId);
+
+$postdata = http_build_query(
+	 array(
+		"action" => "new",
+		'api_key' => Mage::getStoreConfig('payment/payiota/api_key') ,
+		'custom' => $orderId,
+		'price' => ($_order->getBaseGrandTotal() - $_order->getBaseShippingAmount() - $_order->getBaseTaxAmount()),
+		'currency' => $_order->getBaseCurrency()->getCode(),
+		'ipn_url' => Mage::getUrl('payiota/payment/response', array('_secure'=>true))
+	)
+	);
+
+		$opts = array('http' =>
+	    array(
+	        'method'  => 'POST',
+	        'header'  => 'Content-type: application/x-www-form-urlencoded',
+	        'content' => $postdata
+	    )
+	);
+		$context  = stream_context_create($opts);
+		$response = file_get_contents('https://payiota.me/api.php', false, $context);
+		
+		//cURL fallback
+		if (!$response) {
+			
+			if(is_callable('curl_init') == false){
+				echo "ERROR: file_get_contents failed and cURL is not installed";
+				die(1);
+			}
+			$curl = curl_init();
+			curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
+			curl_setopt($curl,CURLOPT_POST, 1);
+			curl_setopt($curl,CURLOPT_POSTFIELDS, $postdata);
+			curl_setopt($curl, CURLOPT_URL, 'https://payiota.me/api.php');
+			$response = curl_exec($curl);
+			
+			if (!$response) {
+				echo "ERROR: file_get_contents and cURL failed";
+				die(1);
+			}
+		}
+		$response = json_decode($response, true);
+		
+$code = '<form name="payiotaform" action="https://payiota.me/external.php" method="GET">
+		<input type="hidden" name="address" value="'.$response[0].'">
+		<input type="hidden" name="price" value="'.$response[1].'">
+		<input type="hidden" name="success_url" value="'.htmlspecialchars(Mage::getUrl('checkout/onepage/success', array('_secure'=>true)), ENT_QUOTES, 'utf-8').'">
+		<input type="hidden" name="cancel_url" value="'.htmlspecialchars(Mage::getUrl('checkout/onepage/failure', array('_secure'=>true)), ENT_QUOTES, 'utf-8').'">
+		 <noscript><input type="submit" value="Click here to complete checkout at PayIOTA.me!"></noscript>
+		</form>';
+echo $code;
+?>
+<script type="text/javascript">
+document.payiotaform.submit();
+</script>
+
+
+
